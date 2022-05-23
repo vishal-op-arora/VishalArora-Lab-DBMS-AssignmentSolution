@@ -1,14 +1,24 @@
-CREATE DEFINER = `root`@`localhost` PROCEDURE `new_procedure`()
-BEGIN
-	select `order`.PRICING_ID, avg(rating.RAT_RATSTARS) as rating, 
-		case 
-			when avg(rating.RAT_RATSTARS) = 5 
-				then 'Excellent Service'
-			when avg(rating.RAT_RATSTARS) > 4 
-				then 'Good Service'
-			when avg(rating.RAT_RATSTARS) < 2 
-				then 'Average Service'
-			else 'Poor Service' end as Type_of_Service from `order` 
-        
-		inner join rating where `order`.ORD_ID=rating.ORD_ID group by `order`.PRICING_ID;
-END
+drop procedure if exists supplierRatings ;
+DELIMITER &&  
+CREATE PROCEDURE supplierRatings ()  
+BEGIN  
+	
+    SELECT sup.SUPP_ID as 'Supplier ID',sup.SUPP_NAME as 'Supplier Name', AVG(rate.RAT_RATSTARS) as 'Average Rating',
+		CASE 
+			when avg(rate.RAT_RATSTARS) = 5 then "Excellent Service"
+			when avg(rate.RAT_RATSTARS) > 4 then "Good Service"
+			when avg(rate.RAT_RATSTARS) > 2 then "Average Service"
+			else "Poor Service"
+		END as typeOfServices
+    FROM supplier sup 
+    JOIN Supplier_pricing sp
+	ON sup.SUPP_ID = sp.SUPP_ID  
+    JOIN `order` o
+    ON sp.PRICING_ID=o.PRICING_ID
+    JOIN rating rate
+    ON o.ORD_ID=rate.ORD_ID GROUP BY (sup.SUPP_ID );
+END &&  
+DELIMITER ;  
+
+use ecommerce;
+call supplierRatings();
